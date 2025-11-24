@@ -1,10 +1,40 @@
+# Dashboard Crash Apps
 Este panel de Dynatrace es una **vista integral de la estabilidad y rendimiento de las aplicaciones móviles**, enfocado específicamente en la monitorización de **crashes (fallos de la aplicación)** para un conjunto de aplicaciones mobiles de su ambiente.
 
 <img width="1714" height="857" alt="Image" src="https://github.com/user-attachments/assets/62438cc0-346d-48e2-860b-6f396877ba3b" />
 
+## 🛠️ Instrucciones de Instalación del Dashboard
+
+Siga estos sencillos pasos para importar el dashboard a su entorno Dynatrace:
+
+---
+
+### 1. Descarga del Archivo de Configuración
+
+Descargue la definición del dashboard en formato **JSON** desde este repositorio.
+
+* **Archivo:** `crash_apps_dashboard_v1.0.json`
+* **Enlace de Descarga:** [**Descargar JSON**]([Insertar el enlace directo al archivo JSON aquí])
+
+---
+
+### 2. Importación en Dynatrace
+
+Una vez que haya descargado el archivo JSON, siga estos pasos dentro de la interfaz de Dynatrace:
+
+1.  Diríjase al menú principal de Dynatrace y seleccione **`Dashboards`** (Paneles de control).
+2.  En la parte superior derecha de la pantalla de Dashboards, busque y haga clic en el botón **`Upload dashboard`** (Cargar panel).
+    > **Tip Alternativo:** Puede ir a `Settings` (Configuración) > `Dashboards` > `Upload dashboard`.
+3.  Se abrirá una ventana de diálogo. Haga clic en **`Browse`** o **arrastre y suelte** el archivo `crash_apps_dashboard_v1.0.json` que descargó en el paso anterior.
+4.  El dashboard aparecerá inmediatamente en su lista de paneles y estará listo para ser utilizado.
+
+---
+
+**Nota:** Asegúrese de que su usuario de Dynatrace tenga los permisos necesarios para configurar o cargar nuevos paneles.
+
 Aquí tienes una descripción general de lo que muestra:
 
-### 📊 Descripción General del Panel
+## 📊 Descripción General del Panel
 
 El dashboard ofrece una combinación de métricas de alto nivel y detalles granulares para la gestión de fallos de la aplicación:
 
