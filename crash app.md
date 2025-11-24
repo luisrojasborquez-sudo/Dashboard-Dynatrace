@@ -13,8 +13,8 @@ Siga estos sencillos pasos para importar el dashboard a su entorno Dynatrace:
 
 Descargue la definición del dashboard en formato **JSON** desde este repositorio.
 
-* **Archivo:** `crash_apps_dashboard_v1.0.json`
-* **Enlace de Descarga:** [**Descargar JSON**]([Insertar el enlace directo al archivo JSON aquí])
+* **Archivo:** `Crash App.json`
+* **Enlace de Descarga:** [**Descargar JSON**]([[Insertar el enlace directo al archivo JSON aquí](https://github.com/luisrojasborquez-sudo/Dashboard-Dynatrace/blob/dda56f9df37cc16673e0a7e8bfa73f8ac97b64fe/Crash%20App.json)])
 
 ---
 
@@ -22,10 +22,9 @@ Descargue la definición del dashboard en formato **JSON** desde este repositori
 
 Una vez que haya descargado el archivo JSON, siga estos pasos dentro de la interfaz de Dynatrace:
 
-1.  Diríjase al menú principal de Dynatrace y seleccione **`Dashboards`** (Paneles de control).
-2.  En la parte superior derecha de la pantalla de Dashboards, busque y haga clic en el botón **`Upload dashboard`** (Cargar panel).
-    > **Tip Alternativo:** Puede ir a `Settings` (Configuración) > `Dashboards` > `Upload dashboard`.
-3.  Se abrirá una ventana de diálogo. Haga clic en **`Browse`** o **arrastre y suelte** el archivo `crash_apps_dashboard_v1.0.json` que descargó en el paso anterior.
+1.  Diríjase al menú principal de Dynatrace y seleccione **`Dashboards`**.
+2.  En la parte superior derecha de la pantalla de Dashboards, busque y haga clic en el botón **`Upload dashboard`**.
+3.  Se abrirá una ventana de diálogo. Haga clic en **`Browse`** o **arrastre y suelte** el archivo `crash apps.json` que descargó en el paso anterior.
 4.  El dashboard aparecerá inmediatamente en su lista de paneles y estará listo para ser utilizado.
 
 ---
