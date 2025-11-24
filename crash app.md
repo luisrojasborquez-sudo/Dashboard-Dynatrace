@@ -9,7 +9,7 @@ Siga estos sencillos pasos para importar el dashboard a su entorno Dynatrace:
 
 ---
 
-### 1. Descarga del Archivo de Configuración
+ **1. Descarga del Archivo de Configuración**
 
 Descargue la definición del dashboard en formato **JSON** desde este repositorio.
 
@@ -18,7 +18,7 @@ Descargue la definición del dashboard en formato **JSON** desde este repositori
 
 ---
 
-### 2. Importación en Dynatrace
+ **2. Importación en Dynatrace**
 
 Una vez que haya descargado el archivo JSON, siga estos pasos dentro de la interfaz de Dynatrace:
 
