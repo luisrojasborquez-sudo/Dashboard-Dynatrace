@@ -1,1 +1,479 @@
-{"version":20,"variables":[{"version":2,"key":"AppName","type":"code","visible":true,"editable":true,"input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n   const usqlQuery = 'SELECT DISTINCT useraction.application FROM usersession WHERE applicationType=\"MOBILE_APPLICATION\"';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}\n\n","multiple":true,"defaultValue":["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]},{"version":2,"key":"Os_Version","type":"code","visible":true,"editable":true,"input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const usqlQuery = 'SELECT DISTINCT OsFamily FROM usersession WHERE useraction.application in (\\''+appsList+'\\')';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}","multiple":true,"defaultValue":["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]},{"version":2,"key":"Version","type":"code","visible":true,"editable":true,"input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const usqlQuery = 'SELECT DISTINCT appVersion FROM usersession WHERE useraction.application in (\\''+appsList+'\\') and OsFamily in (\\''+os_version3+'\\') ';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n  console.log(usqlQuery)\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}","multiple":true,"defaultValue":["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]},{"version":2,"key":"Version20_Android","type":"code","visible":false,"editable":true,"input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const usqlQuery =\n    \"SELECT appVersion, count(*) FROM usersession WHERE useraction.application in ('\" +\n    appsList +\n    \"') and OsFamily in ('Android') GROUP BY appVersion ORDER BY count(*) DESC limit 10\";\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n  });\n  console.log(usqlQuery);\n\n\n  const versionsOnly = response.values.map((row) => row[0]);\n\n  return versionsOnly;\n}","multiple":true,"defaultValue":["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]},{"version":2,"key":"Version20_iOS","type":"code","visible":false,"editable":true,"input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  // --- CORRECCIÓN ---\n  // 1. Quité 'DISTINCT' porque 'GROUP BY' ya agrupa por valores únicos.\n  // 2. Añadí 'DESC' al 'ORDER BY' para mostrar las 20 versiones MÁS usadas (no las menos usadas).\n  const usqlQuery =\n    \"SELECT appVersion, count(*) FROM usersession WHERE useraction.application in ('\" +\n    appsList +\n    \"') and OsFamily in ('iOS') GROUP BY appVersion ORDER BY count(*) DESC limit 10\";\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n  });\n  console.log(usqlQuery);\n\n  // 'response.values' es un array de arrays, por ejemplo:\n  // [ [\"1.2.0\", 1500], [\"1.1.0\", 900], [\"1.2.1\", 300] ]\n\n  // --- CORRECCIÓN ---\n  // Usamos .map() para extraer solo el primer elemento (índice 0) de cada fila.\n  // Ya no necesitamos la función 'flatten' ni 'sampleCount'.\n  const versionsOnly = response.values.map((row) => row[0]);\n\n  // El resultado será un array simple solo con las versiones:\n  // [ \"1.2.0\", \"1.1.0\", \"1.2.1\" ]\n  return versionsOnly;\n}","multiple":true,"defaultValue":["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]}],"tiles":{"9":{"title":"Crash x version","type":"code","input":"\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Transform data to the desired format\n\n\n\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  /**\n   * Función recursiva para recorrer la estructura de datos.\n   * @param {object|array} node - El nodo actual en el recorrido.\n   * @param {Array<string>} path - Un array que almacena las claves del camino actual.\n   */\n  function traverse(node, path) {\n    // Caso base: si el nodo actual es un array, hemos llegado a los valores hoja.\n    if (Array.isArray(node)) {\n      const newObject = {};\n      // Asigna los valores de las ramas usando los nombres del inputData\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      // Asigna los valores de las hojas\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n\n    // Paso recursivo: si es un objeto, continúa el recorrido.\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  // Comienza la recursión desde el objeto de 'values'\n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const osList = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")  \n  \n  const query = \"SELECT appVersion as \\'Versión App\\', Count(usererror.name) as \\'Cantidad\\' , osFamily FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+VersionList+\"\\') and osFamily in (\\'\"+osList+\"\\') GROUP BY appVersion, osFamily ORDER BY appVersion DESC \";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(data)\n  console.log(transformData(data))\n  return transformData(data);\n}","visualization":"categoricalBarChart","visualizationSettings":{"chartSettings":{"truncationMode":"middle","categoryOverrides":{}},"autoSelectVisualization":false,"thresholds":[]}},"10":{"title":"Usuarios afectados por OS","type":"code","input":"\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\n\nexport default async function () {\n  \n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const osList = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n  \n  \n  const query = \"SELECT osFamily, Count(DISTINCT userId)  as \\'Cantidad\\' FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+VersionList+\"\\') AND osFamily != 'macOS' and osFamily in (\\'\"+osList+\"\\')  group by osFamily ORDER BY appVersion DESC\";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(data)\n  console.log(transformData(data))\n  return transformData(data);\n}","visualization":"categoricalBarChart","visualizationSettings":{"chartSettings":{"truncationMode":"middle","categoryOverrides":{}},"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756489365020}]}},"11":{"title":"Crash OS","type":"code","input":"\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  \n  function traverse(node, path) {\n   \n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      // Asigna los valores de las hojas\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  \n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const version3 = version2.replace(/,/g, \"\\',\\'\")\n  \n  const query = \" SELECT osFamily ,Count(usererror.name)  as \\'Cantidad\\' FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+version3+\"\\') AND osFamily != 'macOS' and osFamily in (\\'\"+os_version3+\"\\')  GROUP BY  osFamily\";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(query)\n  console.log(transformData(data))\n  return transformData(data);\n}","visualization":"categoricalBarChart","visualizationSettings":{"autoSelectVisualization":false,"chartSettings":{"truncationMode":"middle"},"thresholds":[]}},"13":{"title":"Detalle Crash iOS","type":"code","input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\n// Transform and enrich the data\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  let totalOcurrencias = 0;\n  let totalUsuariosAfectados = 0;\n  const tempArray = [];\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n\n      const ocurrencias = Number(newObject[\"Cantidad ocurrencias\"] || 0);\n      const usuarios = Number(newObject[\"Usuarios afectados\"] || 0);\n      totalOcurrencias += ocurrencias;\n      totalUsuariosAfectados += usuarios;\n\n      const crashGroupId = newObject[\"Id Crash\"];\n      if (crashGroupId) {\n        newObject[\"Link Crash\"] = `https://bbu55081.apps.dynatrace.com/ui/apps/dynatrace.classic.mobile/ui/mrum/MOBILE_APPLICATION-457593972E484591/analyze-crashes/${crashGroupId}?gtf=-30d+to+now`;\n      }\n\n      tempArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  // Agregar los porcentajes a cada fila\n  tempArray.forEach((obj) => {\n    const ocurrencias = Number(obj[\"Cantidad ocurrencias\"] || 0);\n    const usuarios = Number(obj[\"Usuarios afectados\"] || 0);\n\n    obj[\"% Ocurrencias\"] = totalOcurrencias\n      ? ((ocurrencias / totalOcurrencias) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n    obj[\"% Usuarios afectados\"] = totalUsuariosAfectados\n      ? ((usuarios / totalUsuariosAfectados) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n\n    transformedArray.push(obj);\n  });\n\n  return transformedArray;\n}\n\nexport default async function () {\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n\n  const query = `\n    SELECT appVersion as 'Versión App',\n           crashGroupId as 'Id Crash',\n           usererror.name AS 'Nombre Crash',\n           COUNT(usererror.name) as 'Cantidad ocurrencias',\n           COUNT(DISTINCT internalUserId) as 'Usuarios afectados'\n    FROM usersession\n    WHERE hasCrash = true\n      AND usererror.application in ('${appsList}')\n      AND osFamily = 'iOS'\n      AND appVersion IN ('${VersionList}')\n    GROUP BY appVersion, usererror.name, crashGroupId\n  `;\n\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n\n  console.log(\"DATA iOS:\", JSON.stringify(data, null, 2));\n  return transformData(data);\n}","visualization":"table","visualizationSettings":{"table":{"colorThresholdTarget":"background","monospacedFontEnabled":true,"rowDensity":"comfortable","sortBy":[{"columnId":"[\"Cantidad ocurrencias\"]","direction":"descending"}],"columnOrder":["[\"Versión App\"]","[\"Id Crash\"]","[\"Nombre Crash\"]","[\"Cantidad ocurrencias\"]","[\"Usuarios afectados\"]","[\"Link Crash\"]","[\"% Ocurrencias\"]","[\"% Usuarios afectados\"]"]},"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad ocurrecias","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845817924},{"identifier":"Usuarios afectados","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845819329}]}},"15":{"title":"Crash Android x version ","type":"code","input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const apps = $AppName;\n  const appsList = apps.toString().replace(/,/g, \"','\");\n\n  let versionArray = Array.isArray($Version) ? $Version : [$Version];\n  let versionToUse = versionArray.length > 1 ? $Version20_Android : $Version;\n\n  if (!Array.isArray(versionToUse)) {\n    versionToUse = [versionToUse];\n  }\n\n  const VersionList = versionToUse.toString().replace(/,/g, \"','\");\n\n  let dynamicSelectors = \"\";\n  let arrayForMapping;\n\n  if (Array.isArray(apps) && apps.length > 1) {\n    arrayForMapping = apps;\n    dynamicSelectors = arrayForMapping\n      .map(appName => `CONDITION(count(*), where hasCrash=true AND useraction.application='${appName}') AS \"${appName}\"`)\n      .join(', ');\n  } else {\n    arrayForMapping = versionToUse;\n    dynamicSelectors = arrayForMapping\n      .map(v => `CONDITION(count(*), where hasCrash=true AND appVersion='${v}') AS \"${v}\"`)\n      .join(', ');\n  }\n\n  const usqlQuery = `SELECT DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\") AS \"Date\", ${dynamicSelectors}\n                       FROM usersession\n                       WHERE useraction.application in ('${appsList}')\n                         AND appVersion in ('${VersionList}')\n                         AND osFamily = \"Android\"\n                       GROUP BY DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\")\n                       LIMIT 5000`;\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n    offsetUtc: -180,\n    startTimestamp: new Date($dt_timeframe_from).getTime(),\n    endTimestamp: new Date($dt_timeframe_to).getTime()\n  });\n\n  const typesMappings = { Date: { type: 'timestamp' } };\n  arrayForMapping.forEach(keyName => {\n    typesMappings[keyName] = { type: 'double' };\n  });\n\n  const records = response.values.map(row => {\n    const record = { Date: row[0] };\n    arrayForMapping.forEach((keyName, i) => {\n      record[keyName] = row[i + 1];\n    });\n    return record;\n  });\n\n\n  return {\n    records: records,\n    types: [{\n      indexRange: [0, response.values.length],\n      mappings: typesMappings,\n    }],\n  };\n}","visualization":"barChart","visualizationSettings":{"chartSettings":{"truncationMode":"middle"},"autoSelectVisualization":false,"thresholds":[]}},"16":{"title":"Crash iOS x version ","type":"code","input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const apps = $AppName;\n  const appsList = apps.toString().replace(/,/g, \"','\");\n\n  let versionArray = Array.isArray($Version) ? $Version : [$Version];\n  let versionToUse = versionArray.length > 1 ? $Version20_iOS : $Version;\n\n  if (!Array.isArray(versionToUse)) {\n    versionToUse = [versionToUse];\n  }\n\n  const VersionList = versionToUse.toString().replace(/,/g, \"','\");\n\n  let dynamicSelectors = \"\";\n  let arrayForMapping;\n\n  if (Array.isArray(apps) && apps.length > 1) {\n    arrayForMapping = apps;\n    dynamicSelectors = arrayForMapping\n      .map(appName => `CONDITION(count(*), where hasCrash=true AND useraction.application='${appName}') AS \"${appName}\"`)\n      .join(', ');\n  } else {\n    arrayForMapping = versionToUse;\n    dynamicSelectors = arrayForMapping\n      .map(v => `CONDITION(count(*), where hasCrash=true AND appVersion='${v}') AS \"${v}\"`)\n      .join(', ');\n  }\n\n  const usqlQuery = `SELECT DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\") AS \"Date\", ${dynamicSelectors}\n                       FROM usersession\n                       WHERE useraction.application in ('${appsList}')\n                         AND appVersion in ('${VersionList}')\n                         AND osFamily = \"iOS\"\n                       GROUP BY DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\")\n                       LIMIT 5000`;\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n    offsetUtc: -180,\n    startTimestamp: new Date($dt_timeframe_from).getTime(),\n    endTimestamp: new Date($dt_timeframe_to).getTime()\n  });\n\n  const typesMappings = { Date: { type: 'timestamp' } };\n  arrayForMapping.forEach(keyName => {\n    typesMappings[keyName] = { type: 'double' };\n  });\n\n  const records = response.values.map(row => {\n    const record = { Date: row[0] };\n    arrayForMapping.forEach((keyName, i) => {\n      record[keyName] = row[i + 1];\n    });\n    return record;\n  });\n\n  return {\n    records: records,\n    types: [{\n      indexRange: [0, response.values.length],\n      mappings: typesMappings,\n    }],\n  };\n}","visualization":"barChart","visualizationSettings":{"chartSettings":{"truncationMode":"middle"},"autoSelectVisualization":false,"thresholds":[]}},"17":{"title":"Detalle Crash android","type":"code","input":"import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\n// Transform data and calculate percentages\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  let totalOcurrencias = 0;\n  let totalUsuariosAfectados = 0;\n  const tempArray = [];\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n\n      // Acumular totales\n      const ocurrencias = Number(newObject[\"Cantidad ocurrencias\"] || 0);\n      const usuarios = Number(newObject[\"Usuarios afectados\"] || 0);\n\n      totalOcurrencias += ocurrencias;\n      totalUsuariosAfectados += usuarios;\n\n      // Generar link al crash\n      const crashGroupId = newObject[\"Id Crash\"];\n      if (crashGroupId) {\n        newObject[\"Link Crash\"] =\n          `https://bbu55081.apps.dynatrace.com/ui/apps/dynatrace.classic.mobile/ui/mrum/MOBILE_APPLICATION-457593972E484591/analyze-crashes/${crashGroupId}?gtf=-30d+to+now`;\n      }\n\n      tempArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  // Calcular porcentajes y agregar a los objetos\n  tempArray.forEach((obj) => {\n    const ocurrencias = Number(obj[\"Cantidad ocurrencias\"] || 0);\n    const usuarios = Number(obj[\"Usuarios afectados\"] || 0);\n\n    obj[\"% Ocurrencias\"] = totalOcurrencias\n      ? ((ocurrencias / totalOcurrencias) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n    obj[\"% Usuarios afectados\"] = totalUsuariosAfectados\n      ? ((usuarios / totalUsuariosAfectados) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n\n    transformedArray.push(obj);\n  });\n\n  return transformedArray;\n}\n\n// Main function\nexport default async function () {\n  \n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n\n  const query = `\n    SELECT appVersion as 'Versión App',\n           crashGroupId as 'Id Crash',\n           usererror.name AS 'Nombre Crash',\n           COUNT(usererror.name) as 'Cantidad ocurrencias',\n           COUNT(DISTINCT internalUserId) as 'Usuarios afectados'\n    FROM usersession\n    WHERE hasCrash = true\n      AND usererror.application in ('${appsList}')\n      AND osFamily = 'Android'\n      AND appVersion IN ('${VersionList}')\n    GROUP BY appVersion, usererror.name, crashGroupId\n    ORDER BY Count(usererror.name) desc\n  `;\n\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n\n  console.log(\"DATA BRUTA:\", JSON.stringify(data, null, 2)); // Opcional para debug\n  return transformData(data);\n}","visualization":"table","visualizationSettings":{"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad ocurrecias","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845804900},{"identifier":"Usuarios afectados","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845809057}],"table":{"colorThresholdTarget":"background","monospacedFontColumns":[["Cantidad ocurrencias"]],"monospacedFontEnabled":true,"rowDensity":"comfortable","sortBy":[{"columnId":"[\"Cantidad ocurrencias\"]","direction":"descending"}]}}},"18":{"type":"markdown","content":"![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABy8AAAAMCAYAAADbJPG3AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAACdSURBVHhe7dtBFcAgDETBUBtFA6KrDhf0gofsYeay8fBfRn37FAAAAAAAAECz5y4AAAAAAABAK/ESAAAAAAAAiCBeAgAAAAAAABHESwAAAAAAACCCeAkAAAAAAABEEC8BAAAAAACACOIlAAAAAAAAEGG8c517AwAAAAAAALTxeQkAAAAAAABEEC8BAAAAAACACOIlAAAAAAAAEKDqB2IIBAQ2TEouAAAAAElFTkSuQmCC)"},"19":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n        SELECT CONDITION(count(*), WHERE useraction.apdexCategory=\"SATISFIED\"  ) AS SATISFIED\n               ,CONDITION(count(*), WHERE useraction.apdexCategory= \"TOLERATING\"  ) AS TOLERATING\n               ,count(*) AS Sesiones\n\n        FROM useraction WHERE useraction.application in ('${appsList}')\n`;\n  \n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,    \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  \n  const result_compare = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: timestampResultado, \n    endTimestamp: fechaDesde.getTime() \n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    return \"N/A\";\n  }\n\n  const SATISFIED = Number(result[\"values\"][0][0] || 0);\n  const TOLERATING = Number(result[\"values\"][0][1] || 0);\n  const TOTAL = Number(result[\"values\"][0][2] || 0);\n  \n\n  const SATISFIED_compare = (result_compare && result_compare.values && result_compare.values[0])\n                              ? Number(result_compare.values[0][0] || 0)\n                              : 0;\n  const TOLERATING_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][1] || 0)\n                                  : 0;\n    const TOTAL_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][2] || 0)\n                                  : 0;\n\n  let apdex = 0;\n  if (SATISFIED > 0) {\n    apdex = ((SATISFIED + (TOLERATING/2)) / TOTAL) *100;\n  }\n\n  let apdex_compare = 0;\n  if (SATISFIED_compare > 0) { \n    apdex_compare = ((SATISFIED_compare + (TOLERATING_compare/2)) / TOTAL_compare) *100;\n  }\n\n  console.log(\"actual: \"+apdex)\n  console.log(\"comparado: \"+apdex_compare)\n  console.log(\"fecha desde: \"+fechaDesde+\"  fecha fin: \"+ fechaFin+ \"  fecha anterior: \"+timestampResultado)\n  \n\n  \n  const ApdexStr = apdex.toFixed(2) + \"%\";\n  let diferencia = 0; \n  let porcentajeDiferencia = 0;\n\n  if (apdex > apdex_compare) {\n    diferencia = apdex - apdex_compare;\n    \n    if (apdex_compare > 0) {\n      porcentajeDiferencia = (diferencia / apdex_compare) * 100;\n    } else if (apdex > 0) {\n      porcentajeDiferencia = 100; \n    }\n    return `${ApdexStr} (${porcentajeDiferencia.toFixed(2)}% ↗️🟢)`;\n  }\n  else if (apdex < apdex_compare) {\n    diferencia = apdex_compare - apdex;\n    \n    if (apdex_compare > 0) {\n      porcentajeDiferencia = (diferencia / apdex_compare) * 100;\n    }\n    return `${ApdexStr} (${porcentajeDiferencia.toFixed(2)}% ↘️🔴)`; \n  }\n  else { \n    return `${ApdexStr} (0.00% =🟡)`;\n  }\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Apdex"}}},"20":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nasync function fetchUserSessionData(query, from, to) {\n\n  const startTimestamp = new Date(from).getTime();\n  const endTimestamp = new Date(to).getTime();\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const query = 'SELECT count(*) as \"CER2\" FROM usersession where useraction.application in (\\''+appsList+'\\') and hascrash = true';\n  \n  \n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  const fechaResultado = new Date(timestampResultado); // Este es el \"nuevo\" from\n\n  const data2 = await fetchUserSessionData(query, fechaResultado, fechaDesde);\n  \n  let sesion_actual = parseInt(data[\"values\"]);\n  let sesion_compare = parseInt(data2[\"values\"]);\n\n  let  diferencia = 0;\n\n  console.log(\"actual: \"+ sesion_actual )\n  console.log(\"comparativa: \"+ sesion_compare )\n\n\n  if (sesion_actual > sesion_compare) {\n    diferencia =  sesion_actual - sesion_compare;\n    console.log(\"diferencia: \"+ diferencia)\n    \n    return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% ↗️🔴)\";\n  }\n  else if (sesion_actual < sesion_compare) {\n     diferencia =  sesion_compare - sesion_actual;\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"%  ↘️🟢)\";\n  }\n  else { // No necesitas 'if' en el último 'else'\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% =🟡)\";\n  }\n\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Crash"}}},"21":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nasync function fetchUserSessionData(query, from, to) {\n\n  const startTimestamp = new Date(from).getTime();\n  const endTimestamp = new Date(to).getTime();\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const query = 'SELECT count(*) as \"CER2\" FROM usersession where useraction.application in (\\''+appsList+'\\')';\n  \n  \n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  const fechaResultado = new Date(timestampResultado); // Este es el \"nuevo\" from\n\n  const data2 = await fetchUserSessionData(query, fechaResultado, fechaDesde);\n  \n let sesion_actual = parseInt(data[\"values\"]);\n  let sesion_compare = parseInt(data2[\"values\"]);\n\n  let  diferencia = 0;\n\n  console.log(\"actual: \"+ sesion_actual )\n  console.log(\"comparativa: \"+ sesion_compare )\n\n\n  if (sesion_actual > sesion_compare) {\n    diferencia =  sesion_actual - sesion_compare;\n    console.log(\"diferencia: \"+ diferencia)\n    \n    return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% ↗️🟢)\";\n  }\n  else if (sesion_actual < sesion_compare) {\n     diferencia =  sesion_compare - sesion_actual;\n     return sesion_actual + \" (\" +((diferencia/sesion_compare)*100).toFixed(2) + \"% ↘️🔴)\";\n  }\n  else { // No necesitas 'if' en el último 'else'\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% =🟡)\";\n  }\n\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Sesiones "}}},"24":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count(userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n          AND osFamily = 'Android'\n  `;\n\n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    console.error(\"No se recibieron datos de USQL.\");\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  return crashFreePercentage.toFixed(2) + \"%\";\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Free-crash User Android ","recordField":"element"},"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad ocurrecias","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845804900},{"identifier":"Usuarios afectados","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845809057}]}},"25":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count(userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n          AND osFamily = 'iOS'\n  `;\n\n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    console.error(\"No se recibieron datos de USQL.\");\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  return crashFreePercentage.toFixed(2) + \"%\";\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Free-crash User iOS","recordField":"element"},"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad ocurrecias","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845804900},{"identifier":"Usuarios afectados","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845809057}]}},"26":{"title":"","type":"code","input":"import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count( DISTINCT userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n  `;\n  \n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,    \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  \n  const result_compare = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: timestampResultado, \n    endTimestamp: fechaDesde.getTime() \n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  const totalUsuarios_compare = (result_compare && result_compare.values && result_compare.values[0])\n                              ? Number(result_compare.values[0][0] || 0)\n                              : 0;\n  const usuariosAfectados_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][1] || 0)\n                                  : 0;\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  let crashFreePercentage_compare = 0;\n  if (totalUsuarios_compare > 0) { \n    crashFreePercentage_compare = ((totalUsuarios_compare - usuariosAfectados_compare) / totalUsuarios_compare) * 100;\n  }\n\n  console.log(\"actual: \"+crashFreePercentage)\n  console.log(\"comparado: \"+crashFreePercentage_compare)\n  \n\n  \n  const crashFreeStr = crashFreePercentage.toFixed(2) + \"%\";\n  let diferencia = 0; \n  let porcentajeDiferencia = 0;\n\n  if (crashFreePercentage > crashFreePercentage_compare) {\n    diferencia = crashFreePercentage - crashFreePercentage_compare;\n    \n    if (crashFreePercentage_compare > 0) {\n      porcentajeDiferencia = (diferencia / crashFreePercentage_compare) * 100;\n    } else if (crashFreePercentage > 0) {\n      porcentajeDiferencia = 100; \n    }\n    return `${crashFreeStr} (${porcentajeDiferencia.toFixed(2)}% ↗️🟢)`;\n  }\n  else if (crashFreePercentage < crashFreePercentage_compare) {\n    diferencia = crashFreePercentage_compare - crashFreePercentage;\n    \n    if (crashFreePercentage_compare > 0) {\n      porcentajeDiferencia = (diferencia / crashFreePercentage_compare) * 100;\n    }\n    return `${crashFreeStr} (${porcentajeDiferencia.toFixed(2)}% ↘️🔴)`; \n  }\n  else { \n    return `${crashFreeStr} (0.00% =🟡)`;\n  }\n}","visualization":"singleValue","visualizationSettings":{"singleValue":{"label":"Free-crash User","recordField":"element"},"autoSelectVisualization":false,"thresholds":[],"unitsOverrides":[{"identifier":"Cantidad ocurrecias","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845804900},{"identifier":"Usuarios afectados","unitCategory":"unspecified","baseUnit":"none","displayUnit":null,"decimals":0,"suffix":"","delimiter":false,"added":1756845809057}]}},"27":{"type":"markdown","content":"## $AppName"}},"layouts":{"9":{"x":19,"y":0,"w":5,"h":4},"10":{"x":14,"y":0,"w":5,"h":4},"11":{"x":9,"y":0,"w":5,"h":4},"13":{"x":12,"y":9,"w":12,"h":8},"15":{"x":4,"y":5,"w":8,"h":4},"16":{"x":16,"y":5,"w":8,"h":4},"17":{"x":0,"y":9,"w":12,"h":8},"18":{"x":0,"y":4,"w":24,"h":1},"19":{"x":0,"y":2,"w":3,"h":2},"20":{"x":6,"y":2,"w":3,"h":2},"21":{"x":3,"y":2,"w":3,"h":2},"24":{"x":0,"y":5,"w":4,"h":4},"25":{"x":12,"y":5,"w":4,"h":4},"26":{"x":6,"y":0,"w":3,"h":2},"27":{"x":0,"y":0,"w":6,"h":2}},"importedWithCode":false,"settings":{}}
+{
+"version": 20,
+"variables": [
+{
+"version": 2,
+"key": "AppName",
+"type": "code",
+"visible": true,
+"editable": true,
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n   const usqlQuery = 'SELECT DISTINCT useraction.application FROM usersession WHERE applicationType=\"MOBILE_APPLICATION\"';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}\n\n",
+"multiple": true,
+"defaultValue": ["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]
+},
+{
+"version": 2,
+"key": "Os_Version",
+"type": "code",
+"visible": true,
+"editable": true,
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const usqlQuery = 'SELECT DISTINCT OsFamily FROM usersession WHERE useraction.application in (\\''+appsList+'\\')';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}",
+"multiple": true,
+"defaultValue": ["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]
+},
+{
+"version": 2,
+"key": "Version",
+"type": "code",
+"visible": true,
+"editable": true,
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const usqlQuery = 'SELECT DISTINCT appVersion FROM usersession WHERE useraction.application in (\\''+appsList+'\\') and OsFamily in (\\''+os_version3+'\\') ';\n  const response = await  rumUserSessionsClient.getUsqlResultAsTable({ query: usqlQuery });\n  console.log(usqlQuery)\nconst sampleCount = response.values.length;\n function flatten(arr) {\n    var flat = [];\n    for (var i = 0; i < sampleCount; i++) {\n        flat = flat.concat(arr[i]);\n    }\n    return flat;\n}\n return( flatten(response.values))\n\n}",
+"multiple": true,
+"defaultValue": ["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]
+},
+{
+"version": 2,
+"key": "Version20_Android",
+"type": "code",
+"visible": false,
+"editable": true,
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const usqlQuery =\n    \"SELECT appVersion, count(*) FROM usersession WHERE useraction.application in ('\" +\n    appsList +\n    \"') and OsFamily in ('Android') GROUP BY appVersion ORDER BY count(*) DESC limit 10\";\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n  });\n  console.log(usqlQuery);\n\n\n  const versionsOnly = response.values.map((row) => row[0]);\n\n  return versionsOnly;\n}",
+"multiple": true,
+"defaultValue": ["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]
+},
+{
+"version": 2,
+"key": "Version20_iOS",
+"type": "code",
+"visible": false,
+"editable": true,
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  // --- CORRECCIÓN ---\n  // 1. Quité 'DISTINCT' porque 'GROUP BY' ya agrupa por valores únicos.\n  // 2. Añadí 'DESC' al 'ORDER BY' para mostrar las 20 versiones MÁS usadas (no las menos usadas).\n  const usqlQuery =\n    \"SELECT appVersion, count(*) FROM usersession WHERE useraction.application in ('\" +\n    appsList +\n    \"') and OsFamily in ('iOS') GROUP BY appVersion ORDER BY count(*) DESC limit 10\";\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n  });\n  console.log(usqlQuery);\n\n  // 'response.values' es un array de arrays, por ejemplo:\n  // [ [\"1.2.0\", 1500], [\"1.1.0\", 900], [\"1.2.1\", 300] ]\n\n  // --- CORRECCIÓN ---\n  // Usamos .map() para extraer solo el primer elemento (índice 0) de cada fila.\n  // Ya no necesitamos la función 'flatten' ni 'sampleCount'.\n  const versionsOnly = response.values.map((row) => row[0]);\n\n  // El resultado será un array simple solo con las versiones:\n  // [ \"1.2.0\", \"1.1.0\", \"1.2.1\" ]\n  return versionsOnly;\n}",
+"multiple": true,
+"defaultValue": ["3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"]
+}
+],
+"tiles": {
+"9": {
+"title": "Crash x version",
+"type": "code",
+"input": "\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Transform data to the desired format\n\n\n\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  /**\n   * Función recursiva para recorrer la estructura de datos.\n   * @param {object|array} node - El nodo actual en el recorrido.\n   * @param {Array<string>} path - Un array que almacena las claves del camino actual.\n   */\n  function traverse(node, path) {\n    // Caso base: si el nodo actual es un array, hemos llegado a los valores hoja.\n    if (Array.isArray(node)) {\n      const newObject = {};\n      // Asigna los valores de las ramas usando los nombres del inputData\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      // Asigna los valores de las hojas\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n\n    // Paso recursivo: si es un objeto, continúa el recorrido.\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  // Comienza la recursión desde el objeto de 'values'\n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const osList = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")  \n  \n  const query = \"SELECT appVersion as \\'Versión App\\', Count(usererror.name) as \\'Cantidad\\' , osFamily FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+VersionList+\"\\') and osFamily in (\\'\"+osList+\"\\') GROUP BY appVersion, osFamily ORDER BY appVersion DESC \";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(data)\n  console.log(transformData(data))\n  return transformData(data);\n}",
+"visualization": "categoricalBarChart",
+"visualizationSettings": {
+"chartSettings": {
+"truncationMode": "middle",
+"categoryOverrides": {}
+},
+"autoSelectVisualization": false,
+"thresholds": []
+}
+},
+"10": {
+"title": "Usuarios afectados por OS",
+"type": "code",
+"input": "\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\n\nexport default async function () {\n  \n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const osList = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n  \n  \n  const query = \"SELECT osFamily, Count(DISTINCT userId)  as \\'Cantidad\\' FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+VersionList+\"\\') AND osFamily != 'macOS' and osFamily in (\\'\"+osList+\"\\')  group by osFamily ORDER BY appVersion DESC\";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(data)\n  console.log(transformData(data))\n  return transformData(data);\n}",
+"visualization": "categoricalBarChart",
+"visualizationSettings": {
+"chartSettings": {
+"truncationMode": "middle",
+"categoryOverrides": {}
+},
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756489365020
+}
+]
+}
+},
+"11": {
+"title": "Crash OS",
+"type": "code",
+"input": "\nimport { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  \n  function traverse(node, path) {\n   \n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      // Asigna los valores de las hojas\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n      transformedArray.push(newObject);\n      return;\n    }\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  \n  traverse(inputData.values, []);\n\n  return transformedArray;\n}\n\n\n\nexport default async function () {\n\n  const os_version = $Os_Version;\n  const os_version2 = os_version.toString();\n  const os_version3 = os_version2.replace(/,/g, \"','\");\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const version3 = version2.replace(/,/g, \"\\',\\'\")\n  \n  const query = \" SELECT osFamily ,Count(usererror.name)  as \\'Cantidad\\' FROM usersession where hasCrash =true and usererror.application in (\\'\"+appsList+\"\\') and appVersion in (\\'\"+version3+\"\\') AND osFamily != 'macOS' and osFamily in (\\'\"+os_version3+\"\\')  GROUP BY  osFamily\";\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  console.log(query)\n  console.log(transformData(data))\n  return transformData(data);\n}",
+"visualization": "categoricalBarChart",
+"visualizationSettings": {
+"autoSelectVisualization": false,
+"chartSettings": {
+"truncationMode": "middle"
+},
+"thresholds": []
+}
+},
+"13": {
+"title": "Detalle Crash iOS",
+"type": "code",
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\n// Transform and enrich the data\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  let totalOcurrencias = 0;\n  let totalUsuariosAfectados = 0;\n  const tempArray = [];\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n\n      const ocurrencias = Number(newObject[\"Cantidad ocurrencias\"] || 0);\n      const usuarios = Number(newObject[\"Usuarios afectados\"] || 0);\n      totalOcurrencias += ocurrencias;\n      totalUsuariosAfectados += usuarios;\n\n\n      tempArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  // Agregar los porcentajes a cada fila\n  tempArray.forEach((obj) => {\n    const ocurrencias = Number(obj[\"Cantidad ocurrencias\"] || 0);\n    const usuarios = Number(obj[\"Usuarios afectados\"] || 0);\n\n    obj[\"% Ocurrencias\"] = totalOcurrencias\n      ? ((ocurrencias / totalOcurrencias) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n    obj[\"% Usuarios afectados\"] = totalUsuariosAfectados\n      ? ((usuarios / totalUsuariosAfectados) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n\n    transformedArray.push(obj);\n  });\n\n  return transformedArray;\n}\n\nexport default async function () {\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n\n  const query = `\n    SELECT appVersion as 'Versión App',\n           crashGroupId as 'Id Crash',\n           usererror.name AS 'Nombre Crash',\n           COUNT(usererror.name) as 'Cantidad ocurrencias',\n           COUNT(DISTINCT internalUserId) as 'Usuarios afectados'\n    FROM usersession\n    WHERE hasCrash = true\n      AND usererror.application in ('${appsList}')\n      AND osFamily = 'iOS'\n      AND appVersion IN ('${VersionList}')\n    GROUP BY appVersion, usererror.name, crashGroupId\n  `;\n\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n\n  console.log(\"DATA iOS:\", JSON.stringify(data, null, 2));\n  return transformData(data);\n}",
+"visualization": "table",
+"visualizationSettings": {
+"table": {
+"colorThresholdTarget": "background",
+"monospacedFontEnabled": true,
+"rowDensity": "comfortable",
+"sortBy": [
+{
+"columnId": "[\"Cantidad ocurrencias\"]",
+"direction": "descending"
+}
+],
+"columnOrder": [
+"[\"Versión App\"]",
+"[\"Id Crash\"]",
+"[\"Nombre Crash\"]",
+"[\"Cantidad ocurrencias\"]",
+"[\"Usuarios afectados\"]",
+"[\"% Ocurrencias\"]",
+"[\"% Usuarios afectados\"]"
+]
+},
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad ocurrecias",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845817924
+},
+{
+"identifier": "Usuarios afectados",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845819329
+}
+]
+}
+},
+"15": {
+"title": "Crash Android x version ",
+"type": "code",
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const apps = $AppName;\n  const appsList = apps.toString().replace(/,/g, \"','\");\n\n  let versionArray = Array.isArray($Version) ? $Version : [$Version];\n  let versionToUse = versionArray.length > 1 ? $Version20_Android : $Version;\n\n  if (!Array.isArray(versionToUse)) {\n    versionToUse = [versionToUse];\n  }\n\n  const VersionList = versionToUse.toString().replace(/,/g, \"','\");\n\n  let dynamicSelectors = \"\";\n  let arrayForMapping;\n\n  if (Array.isArray(apps) && apps.length > 1) {\n    arrayForMapping = apps;\n    dynamicSelectors = arrayForMapping\n      .map(appName => `CONDITION(count(*), where hasCrash=true AND useraction.application='${appName}') AS \"${appName}\"`)\n      .join(', ');\n  } else {\n    arrayForMapping = versionToUse;\n    dynamicSelectors = arrayForMapping\n      .map(v => `CONDITION(count(*), where hasCrash=true AND appVersion='${v}') AS \"${v}\"`)\n      .join(', ');\n  }\n\n  const usqlQuery = `SELECT DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\") AS \"Date\", ${dynamicSelectors}\n                       FROM usersession\n                       WHERE useraction.application in ('${appsList}')\n                         AND appVersion in ('${VersionList}')\n                         AND osFamily = \"Android\"\n                       GROUP BY DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\")\n                       LIMIT 5000`;\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n    offsetUtc: -180,\n    startTimestamp: new Date($dt_timeframe_from).getTime(),\n    endTimestamp: new Date($dt_timeframe_to).getTime()\n  });\n\n  const typesMappings = { Date: { type: 'timestamp' } };\n  arrayForMapping.forEach(keyName => {\n    typesMappings[keyName] = { type: 'double' };\n  });\n\n  const records = response.values.map(row => {\n    const record = { Date: row[0] };\n    arrayForMapping.forEach((keyName, i) => {\n      record[keyName] = row[i + 1];\n    });\n    return record;\n  });\n\n\n  return {\n    records: records,\n    types: [{\n      indexRange: [0, response.values.length],\n      mappings: typesMappings,\n    }],\n  };\n}",
+"visualization": "barChart",
+"visualizationSettings": {
+"chartSettings": {
+"truncationMode": "middle"
+},
+"autoSelectVisualization": false,
+"thresholds": []
+}
+},
+"16": {
+"title": "Crash iOS x version ",
+"type": "code",
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\nexport default async function () {\n  const apps = $AppName;\n  const appsList = apps.toString().replace(/,/g, \"','\");\n\n  let versionArray = Array.isArray($Version) ? $Version : [$Version];\n  let versionToUse = versionArray.length > 1 ? $Version20_iOS : $Version;\n\n  if (!Array.isArray(versionToUse)) {\n    versionToUse = [versionToUse];\n  }\n\n  const VersionList = versionToUse.toString().replace(/,/g, \"','\");\n\n  let dynamicSelectors = \"\";\n  let arrayForMapping;\n\n  if (Array.isArray(apps) && apps.length > 1) {\n    arrayForMapping = apps;\n    dynamicSelectors = arrayForMapping\n      .map(appName => `CONDITION(count(*), where hasCrash=true AND useraction.application='${appName}') AS \"${appName}\"`)\n      .join(', ');\n  } else {\n    arrayForMapping = versionToUse;\n    dynamicSelectors = arrayForMapping\n      .map(v => `CONDITION(count(*), where hasCrash=true AND appVersion='${v}') AS \"${v}\"`)\n      .join(', ');\n  }\n\n  const usqlQuery = `SELECT DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\") AS \"Date\", ${dynamicSelectors}\n                       FROM usersession\n                       WHERE useraction.application in ('${appsList}')\n                         AND appVersion in ('${VersionList}')\n                         AND osFamily = \"iOS\"\n                       GROUP BY DATETIME(endTime, \"yyyy-MM-dd HH:mm:ss\", \"1h\")\n                       LIMIT 5000`;\n\n  const response = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: usqlQuery,\n    offsetUtc: -180,\n    startTimestamp: new Date($dt_timeframe_from).getTime(),\n    endTimestamp: new Date($dt_timeframe_to).getTime()\n  });\n\n  const typesMappings = { Date: { type: 'timestamp' } };\n  arrayForMapping.forEach(keyName => {\n    typesMappings[keyName] = { type: 'double' };\n  });\n\n  const records = response.values.map(row => {\n    const record = { Date: row[0] };\n    arrayForMapping.forEach((keyName, i) => {\n      record[keyName] = row[i + 1];\n    });\n    return record;\n  });\n\n  return {\n    records: records,\n    types: [{\n      indexRange: [0, response.values.length],\n      mappings: typesMappings,\n    }],\n  };\n}",
+"visualization": "barChart",
+"visualizationSettings": {
+"chartSettings": {
+"truncationMode": "middle"
+},
+"autoSelectVisualization": false,
+"thresholds": []
+}
+},
+"17": {
+"title": "Detalle Crash android",
+"type": "code",
+"input": "import { rumUserSessionsClient } from \"@dynatrace-sdk/client-classic-environment-v1\";\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\n// Fetch user session data\nasync function fetchUserSessionData(query, from, to) {\n  const startTimestamp = toTimestamp(from);\n  const endTimestamp = toTimestamp(to);\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\n// Transform data and calculate percentages\nfunction transformData(inputData) {\n  const transformedArray = [];\n  const branchNames = inputData.branchNames;\n  const leafNames = inputData.leafNames;\n\n  let totalOcurrencias = 0;\n  let totalUsuariosAfectados = 0;\n  const tempArray = [];\n\n  function traverse(node, path) {\n    if (Array.isArray(node)) {\n      const newObject = {};\n      path.forEach((key, index) => {\n        if (branchNames[index]) {\n          newObject[branchNames[index]] = key;\n        }\n      });\n      node.forEach((value, index) => {\n        if (leafNames[index]) {\n          newObject[leafNames[index]] = value;\n        }\n      });\n\n      // Acumular totales\n      const ocurrencias = Number(newObject[\"Cantidad ocurrencias\"] || 0);\n      const usuarios = Number(newObject[\"Usuarios afectados\"] || 0);\n\n      totalOcurrencias += ocurrencias;\n      totalUsuariosAfectados += usuarios;\n\n      \n\n      tempArray.push(newObject);\n      return;\n    }\n\n    for (const key in node) {\n      if (Object.prototype.hasOwnProperty.call(node, key)) {\n        traverse(node[key], [...path, key]);\n      }\n    }\n  }\n\n  traverse(inputData.values, []);\n\n  // Calcular porcentajes y agregar a los objetos\n  tempArray.forEach((obj) => {\n    const ocurrencias = Number(obj[\"Cantidad ocurrencias\"] || 0);\n    const usuarios = Number(obj[\"Usuarios afectados\"] || 0);\n\n    obj[\"% Ocurrencias\"] = totalOcurrencias\n      ? ((ocurrencias / totalOcurrencias) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n    obj[\"% Usuarios afectados\"] = totalUsuariosAfectados\n      ? ((usuarios / totalUsuariosAfectados) * 100).toFixed(2) + \"%\"\n      : \"0%\";\n\n    transformedArray.push(obj);\n  });\n\n  return transformedArray;\n}\n\n// Main function\nexport default async function () {\n  \n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const version = $Version\n  const version2 = version.toString()\n  const VersionList = version2.replace(/,/g, \"\\',\\'\")\n\n  const query = `\n    SELECT appVersion as 'Versión App',\n           crashGroupId as 'Id Crash',\n           usererror.name AS 'Nombre Crash',\n           COUNT(usererror.name) as 'Cantidad ocurrencias',\n           COUNT(DISTINCT internalUserId) as 'Usuarios afectados'\n    FROM usersession\n    WHERE hasCrash = true\n      AND usererror.application in ('${appsList}')\n      AND osFamily = 'Android'\n      AND appVersion IN ('${VersionList}')\n    GROUP BY appVersion, usererror.name, crashGroupId\n    ORDER BY Count(usererror.name) desc\n  `;\n\n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n\n  console.log(\"DATA BRUTA:\", JSON.stringify(data, null, 2)); // Opcional para debug\n  return transformData(data);\n}",
+"visualization": "table",
+"visualizationSettings": {
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad ocurrecias",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845804900
+},
+{
+"identifier": "Usuarios afectados",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845809057
+}
+],
+"table": {
+"colorThresholdTarget": "background",
+"monospacedFontColumns": [
+[
+"Cantidad ocurrencias"
+]
+],
+"monospacedFontEnabled": true,
+"rowDensity": "comfortable",
+"sortBy": [
+{
+"columnId": "[\"Cantidad ocurrencias\"]",
+"direction": "descending"
+}
+]
+}
+}
+},
+"18": {
+"type": "markdown",
+"content": "![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABy8AAAAMCAYAAADbJPG3AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAACdSURBVHhe7dtBFcAgDETBUBtFA6KrDhf0gofsYeay8fBfRn37FAAAAAAAAECz5y4AAAAAAABAK/ESAAAAAAAAiCBeAgAAAAAAABHESwAAAAAAACCCeAkAAAAAAABEEC8BAAAAAACACOIlAAAAAAAAEGG8c517AwAAAAAAALTxeQkAAAAAAABEEC8BAAAAAACACOIlAAAAAAAAEKDqB2IIBAQ2TEouAAAAAElFTkSuQmCC)"
+},
+"19": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n        SELECT CONDITION(count(*), WHERE useraction.apdexCategory=\"SATISFIED\"  ) AS SATISFIED\n               ,CONDITION(count(*), WHERE useraction.apdexCategory= \"TOLERATING\"  ) AS TOLERATING\n               ,count(*) AS Sesiones\n\n        FROM useraction WHERE useraction.application in ('${appsList}')\n`;\n  \n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,    \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  \n  const result_compare = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    startTimestamp: timestampResultado, \n    endTimestamp: fechaDesde.getTime() \n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    return \"N/A\";\n  }\n\n  const SATISFIED = Number(result[\"values\"][0][0] || 0);\n  const TOLERATING = Number(result[\"values\"][0][1] || 0);\n  const TOTAL = Number(result[\"values\"][0][2] || 0);\n  \n\n  const SATISFIED_compare = (result_compare && result_compare.values && result_compare.values[0])\n                              ? Number(result_compare.values[0][0] || 0)\n                              : 0;\n  const TOLERATING_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][1] || 0)\n                                  : 0;\n    const TOTAL_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][2] || 0)\n                                  : 0;\n\n  let apdex = 0;\n  if (SATISFIED > 0) {\n    apdex = ((SATISFIED + (TOLERATING/2)) / TOTAL) *100;\n  }\n\n  let apdex_compare = 0;\n  if (SATISFIED_compare > 0) { \n    apdex_compare = ((SATISFIED_compare + (TOLERATING_compare/2)) / TOTAL_compare) *100;\n  }\n\n  console.log(\"actual: \"+apdex)\n  console.log(\"comparado: \"+apdex_compare)\n  console.log(\"fecha desde: \"+fechaDesde+\"  fecha fin: \"+ fechaFin+ \"  fecha anterior: \"+timestampResultado)\n  \n\n  \n  const ApdexStr = apdex.toFixed(2) + \"%\";\n  let diferencia = 0; \n  let porcentajeDiferencia = 0;\n\n  if (apdex > apdex_compare) {\n    diferencia = apdex - apdex_compare;\n    \n    if (apdex_compare > 0) {\n      porcentajeDiferencia = (diferencia / apdex_compare) * 100;\n    } else if (apdex > 0) {\n      porcentajeDiferencia = 100; \n    }\n    return `${ApdexStr} (${porcentajeDiferencia.toFixed(2)}% ↗️🟢)`;\n  }\n  else if (apdex < apdex_compare) {\n    diferencia = apdex_compare - apdex;\n    \n    if (apdex_compare > 0) {\n      porcentajeDiferencia = (diferencia / apdex_compare) * 100;\n    }\n    return `${ApdexStr} (${porcentajeDiferencia.toFixed(2)}% ↘️🔴)`; \n  }\n  else { \n    return `${ApdexStr} (0.00% =🟡)`;\n  }\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Apdex"
+}
+}
+},
+"20": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nasync function fetchUserSessionData(query, from, to) {\n\n  const startTimestamp = new Date(from).getTime();\n  const endTimestamp = new Date(to).getTime();\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const query = 'SELECT count(*) as \"CER2\" FROM usersession where useraction.application in (\\''+appsList+'\\') and hascrash = true';\n  \n  \n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  const fechaResultado = new Date(timestampResultado); // Este es el \"nuevo\" from\n\n  const data2 = await fetchUserSessionData(query, fechaResultado, fechaDesde);\n  \n let sesion_actual = parseInt(data[\"values\"]);\n  let sesion_compare = parseInt(data2[\"values\"]);\n\n  let  diferencia = 0;\n\n  console.log(\"actual: \"+ sesion_actual )\n  console.log(\"comparativa: \"+ sesion_compare )\n\n\n  if (sesion_actual > sesion_compare) {\n    diferencia =  sesion_actual - sesion_compare;\n    console.log(\"diferencia: \"+ diferencia)\n    \n    return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% ↗️🔴)\";\n  }\n  else if (sesion_actual < sesion_compare) {\n     diferencia =  sesion_compare - sesion_actual;\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"%  ↘️🟢)\";\n  }\n  else { // No necesitas 'if' en el último 'else'\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% =🟡)\";\n  }\n\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Crash"
+}
+}
+},
+"21": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nasync function fetchUserSessionData(query, from, to) {\n\n  const startTimestamp = new Date(from).getTime();\n  const endTimestamp = new Date(to).getTime();\n\n  const data = await rumUserSessionsClient.getUsqlResultAsTree({\n    startTimestamp,\n    offsetUtc: -180,        \n    endTimestamp,\n    query,\n  });\n\n  return data;\n}\n\nexport default async function () {\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n\n  const query = 'SELECT count(*) as \"CER2\" FROM usersession where useraction.application in (\\''+appsList+'\\')';\n  \n  \n  const data = await fetchUserSessionData(query, $dt_timeframe_from, $dt_timeframe_to);\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  const fechaResultado = new Date(timestampResultado); // Este es el \"nuevo\" from\n\n  const data2 = await fetchUserSessionData(query, fechaResultado, fechaDesde);\n  \n let sesion_actual = parseInt(data[\"values\"]);\n  let sesion_compare = parseInt(data2[\"values\"]);\n\n  let  diferencia = 0;\n\n  console.log(\"actual: \"+ sesion_actual )\n  console.log(\"comparativa: \"+ sesion_compare )\n\n\n  if (sesion_actual > sesion_compare) {\n    diferencia =  sesion_actual - sesion_compare;\n    console.log(\"diferencia: \"+ diferencia)\n    \n    return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% ↗️🟢)\";\n  }\n  else if (sesion_actual < sesion_compare) {\n     diferencia =  sesion_compare - sesion_actual;\n     return sesion_actual + \" (\" +((diferencia/sesion_compare)*100).toFixed(2) + \"% ↘️🔴)\";\n  }\n  else { // No necesitas 'if' en el último 'else'\n     return sesion_actual + \" (\" + ((diferencia/sesion_compare)*100).toFixed(2) + \"% =🟡)\";\n  }\n\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Sesiones "
+}
+}
+},
+"24": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count(userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n          AND osFamily = 'Android'\n  `;\n\n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    console.error(\"No se recibieron datos de USQL.\");\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  return crashFreePercentage.toFixed(2) + \"%\";\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Free-crash User Android ",
+"recordField": "element"
+},
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad ocurrecias",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845804900
+},
+{
+"identifier": "Usuarios afectados",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845809057
+}
+]
+}
+},
+"25": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\n// Convert datetime string to timestamp in milliseconds\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n\n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count(userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n          AND osFamily = 'iOS'\n  `;\n\n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,        \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    console.error(\"No se recibieron datos de USQL.\");\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  return crashFreePercentage.toFixed(2) + \"%\";\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Free-crash User iOS",
+"recordField": "element"
+},
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad ocurrecias",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845804900
+},
+{
+"identifier": "Usuarios afectados",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845809057
+}
+]
+}
+},
+"26": {
+"title": "",
+"type": "code",
+"input": "import { rumUserSessionsClient } from '@dynatrace-sdk/client-classic-environment-v1';\n\nfunction toTimestamp(datetime) {\n  return Date.parse(datetime);\n}\n\nexport default async function () {\n  const startTimestamp = toTimestamp($dt_timeframe_from);\n  const endTimestamp = toTimestamp($dt_timeframe_to);\n  \n  const apps = $AppName;\n  const apps2 = apps.toString();\n  const appsList = apps2.replace(/,/g, \"','\");\n  \n  const query = `\n    SELECT COUNT(DISTINCT userId) as 'Usuarios',\n           CONDITION(count( DISTINCT userId) , WHERE hasCrash=true ) as 'Usuarios_afectados'\n    FROM usersession\n    WHERE (usererror.application in ('${appsList}') or useraction.application in ('${appsList}') or userevent.application in ('${appsList}'))\n  `;\n  \n  const result = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    offsetUtc: -180,    \n    startTimestamp: startTimestamp,\n    endTimestamp: endTimestamp\n  });\n\n  const fechaDesde = new Date($dt_timeframe_from);\n  const fechaFin = new Date($dt_timeframe_to);\n  const diferenciaEnMs = fechaFin - fechaDesde;\n  const timestampResultado = fechaDesde.getTime() - diferenciaEnMs;\n  \n  const result_compare = await rumUserSessionsClient.getUsqlResultAsTable({\n    query: query,\n    startTimestamp: timestampResultado, \n    endTimestamp: fechaDesde.getTime() \n  });\n\n  if (!result || !result.values || result.values.length === 0) {\n    return \"N/A\";\n  }\n\n  const totalUsuarios = Number(result[\"values\"][0][0] || 0);\n  const usuariosAfectados = Number(result[\"values\"][0][1] || 0);\n\n  const totalUsuarios_compare = (result_compare && result_compare.values && result_compare.values[0])\n                              ? Number(result_compare.values[0][0] || 0)\n                              : 0;\n  const usuariosAfectados_compare = (result_compare && result_compare.values && result_compare.values[0])\n                                  ? Number(result_compare.values[0][1] || 0)\n                                  : 0;\n\n  let crashFreePercentage = 0;\n  if (totalUsuarios > 0) {\n    crashFreePercentage = ((totalUsuarios - usuariosAfectados) / totalUsuarios) * 100;\n  }\n\n  let crashFreePercentage_compare = 0;\n  if (totalUsuarios_compare > 0) { \n    crashFreePercentage_compare = ((totalUsuarios_compare - usuariosAfectados_compare) / totalUsuarios_compare) * 100;\n  }\n\n  console.log(\"actual: \"+crashFreePercentage)\n  console.log(\"comparado: \"+crashFreePercentage_compare)\n  \n\n  \n  const crashFreeStr = crashFreePercentage.toFixed(2) + \"%\";\n  let diferencia = 0; \n  let porcentajeDiferencia = 0;\n\n  if (crashFreePercentage > crashFreePercentage_compare) {\n    diferencia = crashFreePercentage - crashFreePercentage_compare;\n    \n    if (crashFreePercentage_compare > 0) {\n      porcentajeDiferencia = (diferencia / crashFreePercentage_compare) * 100;\n    } else if (crashFreePercentage > 0) {\n      porcentajeDiferencia = 100; \n    }\n    return `${crashFreeStr} (${porcentajeDiferencia.toFixed(2)}% ↗️🟢)`;\n  }\n  else if (crashFreePercentage < crashFreePercentage_compare) {\n    diferencia = crashFreePercentage_compare - crashFreePercentage;\n    \n    if (crashFreePercentage_compare > 0) {\n      porcentajeDiferencia = (diferencia / crashFreePercentage_compare) * 100;\n    }\n    return `${crashFreeStr} (${porcentajeDiferencia.toFixed(2)}% ↘️🔴)`; \n  }\n  else { \n    return `${crashFreeStr} (0.00% =🟡)`;\n  }\n}",
+"visualization": "singleValue",
+"visualizationSettings": {
+"singleValue": {
+"label": "Free-crash User",
+"recordField": "element"
+},
+"autoSelectVisualization": false,
+"thresholds": [],
+"unitsOverrides": [
+{
+"identifier": "Cantidad ocurrecias",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845804900
+},
+{
+"identifier": "Usuarios afectados",
+"unitCategory": "unspecified",
+"baseUnit": "none",
+"displayUnit": null,
+"decimals": 0,
+"suffix": "",
+"delimiter": false,
+"added": 1756845809057
+}
+]
+}
+},
+"27": {
+"type": "markdown",
+"content": "## $AppName"
+}
+},
+"layouts": {
+"9": {
+"x": 19,
+"y": 0,
+"w": 5,
+"h": 4
+},
+"10": {
+"x": 14,
+"y": 0,
+"w": 5,
+"h": 4
+},
+"11": {
+"x": 9,
+"y": 0,
+"w": 5,
+"h": 4
+},
+"13": {
+"x": 12,
+"y": 9,
+"w": 12,
+"h": 8
+},
+"15": {
+"x": 4,
+"y": 5,
+"w": 8,
+"h": 4
+},
+"16": {
+"x": 16,
+"y": 5,
+"w": 8,
+"h": 4
+},
+"17": {
+"x": 0,
+"y": 9,
+"w": 12,
+"h": 8
+},
+"18": {
+"x": 0,
+"y": 4,
+"w": 24,
+"h": 1
+},
+"19": {
+"x": 0,
+"y": 2,
+"w": 3,
+"h": 2
+},
+"20": {
+"x": 6,
+"y": 2,
+"w": 3,
+"h": 2
+},
+"21": {
+"x": 3,
+"y": 2,
+"w": 3,
+"h": 2
+},
+"24": {
+"x": 0,
+"y": 5,
+"w": 4,
+"h": 4
+},
+"25": {
+"x": 12,
+"y": 5,
+"w": 4,
+"h": 4
+},
+"26": {
+"x": 6,
+"y": 0,
+"w": 3,
+"h": 2
+},
+"27": {
+"x": 0,
+"y": 0,
+"w": 6,
+"h": 2
+}
+},
+"importedWithCode": true,
+"settings": {}
+}
