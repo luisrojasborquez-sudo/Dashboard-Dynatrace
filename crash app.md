@@ -50,5 +50,21 @@ El dashboard ofrece una combinación de métricas de alto nivel y detalles granu
     * En la parte inferior, se encuentran las tablas de **`Detalle Crash Android`** y **`Detalle Crash iOS`**, que son cruciales para la resolución de problemas.
     * Estas tablas identifican los **`Nombre Crash`** (por ejemplo, `java.lang.NullPointerException`, `EXC_BREAKPOINT`) que están ocurriendo con mayor frecuencia.
     * Permiten correlacionar la cantidad de ocurrencias y los usuarios afectados con la **`Versión App`** específica, facilitando la identificación de versiones defectuosas que deben ser priorizadas para un parche.
+  
+4.   **Ajuste de Filtros y Alcance**
+
+      Para que el dashboard refleje los datos de las aplicaciones de su interés, utilice los filtros en la parte superior del panel de la siguiente manera:
+   
+      * **AppName (`Aplicación`):**
+          * **Propósito:** Define qué aplicación(es) móvil(es) se incluyen en todas las métricas.
+          * **Ajuste:** Asegúrese de seleccionar la(s) aplicación(es) correcta(s) que desea monitorear para evitar datos irrelevantes o faltantes.
+   
+      * **Version (`Application version`):**
+          * **Propósito:** Permite enfocar el análisis en una versión específica (ej. `11.60.0`) o un rango de versiones.
+          * **Ajuste:** Útil para ver el impacto de un nuevo despliegue o para centrarse solo en las versiones de producción más recientes.
+      
+      * **OS_Version (`Operating system`):**
+          * **Propósito:** Aunque el panel ya separa Android e iOS en sus componentes principales, este filtro puede usarse para aislar temporalmente los datos a una sola plataforma.
+          * **Ajuste:** Mantener en "Todos" para la vista completa, o seleccionar `Android` o `iOS` para depuración específica.
 
 En resumen, es un panel diseñado para que los equipos de ingeniería y producto puedan **evaluar rápidamente la salud de la aplicación**, **cuantificar el impacto de los fallos** en los usuarios y **navegar directamente a la causa raíz** (App Version y Nombre Crash) de los problemas más frecuentes.
