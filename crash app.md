@@ -14,7 +14,7 @@ Siga estos sencillos pasos para importar el dashboard a su entorno Dynatrace:
 Descargue la definición del dashboard en formato **JSON** desde este repositorio.
 
 * **Archivo:** `Crash App.json`
-* **Enlace de Descarga:** [**Descargar JSON**](https://github.com/luisrojasborquez-sudo/Dashboard-Dynatrace/blob/dda56f9df37cc16673e0a7e8bfa73f8ac97b64fe/Crash%20App.json))
+* **Enlace de Descarga:** [**Descargar JSON**](https://github.com/luisrojasborquez-sudo/Dashboard-Dynatrace/blob/main/Crash%20App.json)
 
 ---
 
