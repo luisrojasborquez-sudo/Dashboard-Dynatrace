@@ -1,7 +1,8 @@
 # Dashboard Crash Apps
 Este panel de Dynatrace es una **vista integral de la estabilidad y rendimiento de las aplicaciones móviles**, enfocado específicamente en la monitorización de **crashes (fallos de la aplicación)** para un conjunto de aplicaciones mobiles de su ambiente.
 
-<img width="1714" height="857" alt="Image" src="https://github.com/user-attachments/assets/62438cc0-346d-48e2-860b-6f396877ba3b" />
+<img width="1711" height="862" alt="image" src="https://github.com/user-attachments/assets/e2471196-b548-4f7b-8037-50469d76fc47" />
+
 
 ## 🛠️ Instrucciones de Instalación del Dashboard
 
